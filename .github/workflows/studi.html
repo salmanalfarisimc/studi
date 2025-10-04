@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panduan Interaktif Beasiswa RTP University of Sydney</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The application uses a single-page dashboard with thematic top navigation. This structure is ideal for users (applicants, parents) who need to access specific, complex information quickly without scrolling through a long document. The overhaul focuses on a cleaner visual hierarchy, improved card-based layouts, and more detailed content within each section, especially "Kriteria Seleksi", to transform the page from a simple summary into a strategic guide for applicants. -->
+    <!-- Visualization & Content Choices: 
+        1. Ringkasan -> Goal: Impress & Summarize -> Viz/Method: Donut Chart (Chart.js) + Key Metric Cards. -> Interaction: Tooltips on chart. -> Justification: Provides an immediate, high-level understanding of the scholarship's significant value. The visual is more impactful than text alone.
+        2. Rincian Keuangan -> Goal: Detail Benefits -> Viz/Method: Enhanced icon-based grid of cards. -> Interaction: Hover effects. -> Justification: Breaks down financial components into scannable, visually appealing, and easily digestible pieces of information.
+        3. Proses Aplikasi -> Goal: Guide Action -> Viz/Method: Enhanced visual flowchart with detailed text descriptions for each step. -> Interaction: None, focus is on clarity. -> Justification: The visual flow simplifies a complex process. Adding detailed "how-to" text below makes it an actionable guide.
+        4. Kriteria Seleksi -> Goal: Strategize & Inform -> Viz/Method: Multi-card layout with lists and emphasis boxes. -> Interaction: None. -> Justification: This is the core "detailed" section. Separating criteria into components (Academic, H1E, Research) with clear examples from the PDF helps applicants precisely understand how they are being evaluated and where to focus their efforts.
+        5. Info Visa, Aturan, FAQ -> Goal: Organize & Clarify -> Viz/Method: Enhanced accordions with rotating chevron icons. -> Interaction: Click to expand. -> Justification: Hides dense but critical information, preventing overwhelm while keeping the UI clean and user-controlled.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        :root {
+            --color-background: #FDFBF8;
+            --color-text-primary: #4A4A4A;
+            --color-text-secondary: #6B4F4F;
+            --color-accent: #A27B5C;
+            --color-surface: #FFFFFF;
+            --color-border: #EAE3D9;
+            --color-nav-active-bg: #EAE3D9;
+            --color-nav-active-border: #D6CDBF;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text-primary);
+        }
+        .nav-link {
+            padding: 10px 20px;
+            border-radius: 9999px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+            font-weight: 500;
+        }
+        .nav-link.active {
+            background-color: var(--color-nav-active-bg);
+            color: var(--color-text-primary);
+            font-weight: 700;
+            border-color: var(--color-nav-active-border);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .nav-link:not(.active):hover {
+            background-color: #F5F1EB;
+        }
+        .card {
+            background-color: var(--color-surface);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid var(--color-border);
+            height: 100%;
+        }
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        .section-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .section-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 380px;
+            margin: auto;
+            height: 380px;
+        }
+        .accordion-item .accordion-title {
+            cursor: pointer;
+            padding: 1rem 1.5rem;
+            width: 100%;
+            text-align: left;
+            background-color: #F9F6F2;
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        .accordion-item .accordion-title:hover {
+            background-color: #F5F1EB;
+        }
+        .accordion-item .accordion-content {
+            padding: 1.5rem;
+            display: none;
+            border: 1px solid var(--color-border);
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            background-color: var(--color-surface);
+            line-height: 1.6;
+        }
+        .accordion-item.open .accordion-content {
+            display: block;
+        }
+        .accordion-item.open .accordion-title {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        .chevron {
+            transition: transform 0.3s ease;
+        }
+        .accordion-item.open .chevron {
+            transform: rotate(180deg);
+        }
+        .process-flow-container .step {
+            text-align: center;
+            position: relative;
+            flex: 1;
+        }
+        .process-flow-container .icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            background-color: #F9F6F2;
+            border: 2px solid var(--color-border);
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+        .process-flow-container .line {
+            position: absolute;
+            top: 36px;
+            left: 50%;
+            right: -50%;
+            border-top: 2px dashed var(--color-border);
+            z-index: -1;
+        }
+        .process-flow-container .step:last-child .line {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .process-flow-container .line {
+                left: 50%;
+                right: 50%;
+                top: 50%;
+                bottom: -50%;
+                width: 2px;
+                height: 100%;
+                border-top: none;
+                border-left: 2px dashed var(--color-border);
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+        
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-800">Panduan Lengkap Beasiswa RTP</h1>
+            <p class="text-xl text-gray-600 mt-3">The University of Sydney</p>
+        </header>
+
+        <nav class="flex flex-wrap justify-center gap-2 md:gap-4 mb-12">
+            <button data-section="ringkasan" class="nav-link active">📊 Ringkasan</button>
+            <button data-section="keuangan" class="nav-link">💰 Rincian Keuangan</button>
+            <button data-section="hak" class="nav-link">⚖️ Hak & Kewajiban</button>
+            <button data-section="proses" class="nav-link">🚀 Proses Aplikasi</button>
+            <button data-section="seleksi" class="nav-link">🔍 Kriteria Seleksi</button>
+            <button data-section="visa" class="nav-link">🛂 Info Visa</button>
+            <button data-section="aturan" class="nav-link">📜 Aturan Penting</button>
+            <button data-section="faq" class="nav-link">❓ FAQ</button>
+        </nav>
+
+        <main id="main-content">
+            
+            <section id="ringkasan" class="section-content active">
+                <div class="card mb-8">
+                    <h2 class="text-3xl font-bold mb-4 text-center text-gray-800">Nilai & Manfaat Utama Beasiswa</h2>
+                    <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Beasiswa RTP adalah paket pendanaan lengkap dari Pemerintah Australia. Ini bukan sekadar bantuan biaya, melainkan investasi penuh untuk mendukung kesuksesan riset Anda.</p>
+                    <div class="grid lg:grid-cols-2 gap-8 items-center">
+                        <div class="chart-container">
+                            <canvas id="scholarshipChart"></canvas>
+                        </div>
+                        <div class="flex flex-col gap-6">
+                            <div class="p-6 bg-[#F9F6F2] rounded-xl border border-var(--color-border)">
+                                <h3 class="font-bold text-lg text-var(--color-text-secondary)">Uang Saku Tahunan (2025)</h3>
+                                <p class="text-3xl font-bold text-var(--color-accent)">$41,753 AUD</p>
+                                <p class="text-sm text-gray-500">Diberikan untuk biaya hidup, bebas pajak.</p>
+                            </div>
+                            <div class="p-6 bg-[#F9F6F2] rounded-xl border border-var(--color-border)">
+                                <h3 class="font-bold text-lg text-var(--color-text-secondary)">Pembebasan Biaya Kuliah</h3>
+                                <p class="text-3xl font-bold text-var(--color-accent)">$50,000+ AUD</p>
+                                <p class="text-sm text-gray-500">Estimasi nilai per tahun, ditanggung 100%.</p>
+                            </div>
+                             <div class="p-6 bg-var(--color-text-secondary) text-white rounded-xl">
+                                <h3 class="font-bold text-lg text-gray-200">Estimasi Nilai Total Tahunan</h3>
+                                <p class="text-3xl font-bold text-white">~ $91,753 AUD</p>
+                                <p class="text-sm text-gray-300">Kombinasi uang saku dan pembebasan biaya.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="keuangan" class="section-content">
+                 <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-gray-800">Rincian Komprehensif Manfaat Finansial</h2>
+                    <p class="text-gray-600 mt-3 max-w-3xl mx-auto">Beasiswa ini dirancang untuk menghilangkan beban finansial sehingga Anda dapat fokus sepenuhnya pada penelitian Anda.</p>
+                </div>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="card text-center">
+                        <p class="text-5xl mb-4">💵</p>
+                        <h3 class="font-bold text-xl mb-2">Uang Saku Tahunan</h3>
+                        <p class="text-3xl font-extrabold text-var(--color-accent)">$41,753</p>
+                        <p class="text-gray-600 mt-2">Diberikan untuk biaya hidup, akomodasi, dan kebutuhan pribadi. Nilainya disesuaikan setiap tahun.</p>
+                    </div>
+                    <div class="card text-center">
+                        <p class="text-5xl mb-4">🎓</p>
+                        <h3 class="font-bold text-xl mb-2">Bebas Biaya Kuliah</h3>
+                        <p class="text-3xl font-extrabold text-var(--color-accent)">100%</p>
+                        <p class="text-gray-600 mt-2">Menanggung seluruh biaya pendidikan (tuition fee) selama durasi studi penuh.</p>
+                    </div>
+                    <div class="card text-center">
+                        <p class="text-5xl mb-4">🏥</p>
+                        <h3 class="font-bold text-xl mb-2">Asuransi Kesehatan</h3>
+                        <p class="text-3xl font-extrabold text-var(--color-accent)">Gratis</p>
+                        <p class="text-gray-600 mt-2">Mencakup Overseas Student Health Cover (OSHC) standar untuk satu orang.</p>
+                    </div>
+                    <div class="card text-center">
+                        <p class="text-5xl mb-4">✈️</p>
+                        <h3 class="font-bold text-xl mb-2">Tunjangan Relokasi</h3>
+                        <p class="text-3xl font-extrabold text-var(--color-accent)">$2,970</p>
+                        <p class="text-gray-600 mt-2">Hingga $1,485 untuk kedatangan dan $1,485 untuk kepulangan setelah lulus.</p>
+                    </div>
+                    <div class="card text-center">
+                        <p class="text-5xl mb-4">📝</p>
+                        <h3 class="font-bold text-xl mb-2">Tunjangan Tesis</h3>
+                        <p class="text-3xl font-extrabold text-var(--color-accent)">$840</p>
+                        <p class="text-gray-600 mt-2">Bantuan biaya untuk produksi tesis akhir (hingga $840 untuk PhD).</p>
+                    </div>
+                     <div class="card text-center">
+                        <p class="text-5xl mb-4">📄</p>
+                        <h3 class="font-bold text-xl mb-2">Biaya Visa</h3>
+                        <p class="text-3xl font-extrabold text-var(--color-accent)">Dibebaskan</p>
+                        <p class="text-gray-600 mt-2">Biaya aplikasi visa pelajar dibebaskan oleh Pemerintah Australia saat pengajuan.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="hak" class="section-content">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-gray-800">Hak dan Dukungan Selama Studi</h2>
+                    <p class="text-gray-600 mt-3 max-w-3xl mx-auto">Selain dukungan finansial, beasiswa ini memberikan berbagai hak untuk mendukung keseimbangan antara studi dan kehidupan pribadi Anda.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="card">
+                        <h3 class="font-bold text-xl mb-3">⏳ Durasi Beasiswa</h3>
+                        <ul class="space-y-2 list-inside list-disc">
+                            <li><strong>Doktor (S3):</strong> Maksimal 14 periode riset (sekitar 3.5 tahun).</li>
+                            <li><strong>Master (S2):</strong> Maksimal 7 periode riset (sekitar 1.75 tahun).</li>
+                        </ul>
+                    </div>
+                     <div class="card">
+                        <h3 class="font-bold text-xl mb-3">📚 Kewajiban Utama</h3>
+                        <ul class="space-y-2 list-inside list-disc">
+                            <li>Terdaftar sebagai mahasiswa riset <strong>penuh waktu</strong>.</li>
+                            <li>Menunjukkan <strong>kemajuan riset yang memuaskan</strong> secara konsisten.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card mt-6">
+                     <h3 class="font-bold text-xl mb-6 text-center">Fasilitas Cuti Berbayar</h3>
+                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+                        <div>
+                            <p class="text-5xl">🏖️</p>
+                            <p class="font-semibold text-lg mt-2">Cuti Liburan</p>
+                            <p class="text-gray-600 font-bold text-xl">20 hari</p>
+                            <p class="text-gray-500">per tahun, dapat diakumulasikan.</p>
+                        </div>
+                        <div>
+                            <p class="text-5xl">🤒</p>
+                            <p class="font-semibold text-lg mt-2">Cuti Sakit/Perawatan</p>
+                            <p class="text-gray-600 font-bold text-xl">10 hari</p>
+                            <p class="text-gray-500">per tahun, plus tambahan hingga 12 minggu.</p>
+                        </div>
+                        <div>
+                            <p class="text-5xl">👨‍👩‍👧</p>
+                            <p class="font-semibold text-lg mt-2">Cuti Orang Tua</p>
+                            <p class="text-gray-600 font-bold text-xl">12 minggu</p>
+                            <p class="text-gray-500">Setelah 12 bulan masa studi.</p>
+                        </div>
+                     </div>
+                </div>
+            </section>
+
+            <section id="proses" class="section-content">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-gray-800">Panduan Strategis Proses Aplikasi</h2>
+                    <p class="text-gray-600 mt-3 max-w-3xl mx-auto">Memahami alur pendaftaran adalah langkah pertama. Beasiswa ini sangat kompetitif, dan persiapan yang matang dan strategis adalah segalanya.</p>
+                </div>
+
+                <div class="card">
+                    <div class="relative flex flex-col md:flex-row justify-between items-center gap-8 md:gap-4 process-flow-container">
+                        <div class="step">
+                            <div class="icon">1</div>
+                            <h3 class="font-bold text-lg">Perkuat Profil</h3>
+                            <p class="text-sm text-gray-600 mt-1">Fokus pada IPK, publikasi, dan pengalaman riset yang relevan.</p>
+                            <div class="line"></div>
+                        </div>
+                        <div class="step">
+                            <div class="icon">2</div>
+                            <h3 class="font-bold text-lg">Dapatkan Pembimbing</h3>
+                            <p class="text-sm text-gray-600 mt-1">Hubungi calon pembimbing dengan email profesional dan proposal mini.</p>
+                            <div class="line"></div>
+                        </div>
+                        <div class="step">
+                            <div class="icon">3</div>
+                            <h3 class="font-bold text-lg">Siapkan Dokumen</h3>
+                            <p class="text-sm text-gray-600 mt-1">Tulis proposal riset yang kuat dan siapkan semua bukti pendukung.</p>
+                            <div class="line"></div>
+                        </div>
+                        <div class="step">
+                            <div class="icon">4</div>
+                            <h3 class="font-bold text-lg">Daftar Terpadu</h3>
+                            <p class="text-sm text-gray-600 mt-1">Ajukan pendaftaran S2/S3 dan beasiswa secara bersamaan via portal online.</p>
+                        </div>
+                    </div>
+                     <div class="mt-8 pt-8 border-t border-var(--color-border)">
+                        <h3 class="font-bold text-xl mb-4 text-center">Tips Strategis</h3>
+                        <ul class="list-disc list-inside space-y-3 text-gray-700 max-w-2xl mx-auto">
+                            <li><strong>Hubungi Calon Pembimbing (Supervisor):</strong> Ini bukan sekadar formalitas, tapi langkah krusial. Kirim email yang berisi rangkuman singkat profil Anda, mengapa Anda tertarik dengan riset mereka, dan lampirkan draf proposal riset. Dukungan dari pembimbing sangat meningkatkan peluang Anda.</li>
+                            <li><strong>Siapkan Bukti Pengalaman Riset:</strong> Jangan hanya mencantumkan judul publikasi. Siapkan tautan, DOI, atau salinan PDF. Untuk pengalaman profesional, siapkan surat referensi yang mendetail dari atasan yang menjelaskan kontribusi riset Anda.</li>
+                             <li><strong>Pahami Batas Waktu:</strong> Keterlambatan akan membuat aplikasi Anda dinilai pada putaran berikutnya. Pastikan semua dokumen, terutama transkrip akhir, sudah lengkap sebelum batas waktu.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="seleksi" class="section-content">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-gray-800">Anatomi Proses Seleksi</h2>
+                    <p class="text-gray-600 mt-3 max-w-3xl mx-auto">Seleksi didasarkan murni pada prestasi akademik dan pengalaman riset. Memahami bagaimana setiap komponen dinilai adalah kunci untuk membangun aplikasi yang unggul.</p>
+                </div>
+
+                <div class="card mb-6">
+                    <h3 class="font-bold text-xl mb-6 text-center">Komponen Penilaian Utama</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-6 text-center">
+                        <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                            <p class="text-4xl">🎓</p>
+                            <p class="font-semibold mt-2">Nilai S1 (UG WAM)</p>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                            <p class="text-4xl">🏅</p>
+                            <p class="font-semibold mt-2">Honours Kelas 1 (H1)</p>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                            <p class="text-4xl"> equivalen</p>
+                            <p class="font-semibold mt-2">Gelar Setara H1 (H1E)</p>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                            <p class="text-4xl">📜</p>
+                            <p class="font-semibold mt-2">Master by Research</p>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                            <p class="text-4xl">🌍</p>
+                            <p class="font-semibold mt-2">Peringkat Universitas</p>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                            <p class="text-4xl">🔬</p>
+                            <p class="font-semibold mt-2">Pengalaman Riset</p>
+                        </div>
+                    </div>
+                </div>
+
+                 <div class="grid lg:grid-cols-2 gap-6">
+                    <div class="card">
+                        <h3 class="font-bold text-xl mb-4">Definisi "Honours 1 Equivalent" (H1E)</h3>
+                        <p class="text-gray-600 mb-4">Jika Anda tidak memiliki gelar Honours 1, Anda dapat dianggap setara jika memenuhi salah satu kriteria berikut:</p>
+                        <ul class="list-disc list-inside space-y-3 text-gray-700">
+                            <li>Gelar <strong>Master of Philosophy</strong> (MPhil) atau setara (penelitian penuh).</li>
+                            <li>Gelar <strong>Master by Coursework</strong> dengan IPK sangat tinggi (minimal 80) DAN komponen riset yang signifikan (disertasi/tesis minimal 25% dari total SKS).</li>
+                            <li>Kualifikasi dari universitas luar negeri yang oleh Sydney University diakui setara dengan Honours 1 Australia.</li>
+                            <li>Keanggotaan atau fellowship dari organisasi profesional bergengsi yang diperoleh melalui studi lanjutan dan ujian yang ketat.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3 class="font-bold text-xl mb-4">Kriteria Kunci Pengalaman Riset</h3>
+                         <p class="text-gray-600 mb-4">Pengalaman yang paling dihargai adalah yang dapat dibuktikan, relevan, dan terjadi dalam 5 tahun terakhir. Fokus pada:</p>
+                        <ul class="list-disc list-inside space-y-3 text-gray-700">
+                            <li><strong>Publikasi Ilmiah (Poin Tertinggi):</strong> Artikel di jurnal internasional terindeks (Scopus, ISI/Web of Science) atau buku/bab buku dari penerbit terkemuka.</li>
+                            <li><strong>Makalah Konferensi:</strong> Makalah yang melalui proses peer-review dan dipresentasikan di konferensi nasional/internasional terkemuka.</li>
+                            <li><strong>Paten:</strong> Paten yang telah resmi diberikan oleh badan pemerintah.</li>
+                            <li><strong>Pengalaman Profesional Relevan:</strong> Minimal 1.5 tahun pengalaman riset yang substantif di industri atau lembaga riset (bukan dalam konteks pelatihan/magang).</li>
+                        </ul>
+                        <div class="mt-4 p-4 bg-yellow-50 text-yellow-800 border-l-4 border-yellow-400 rounded-r-lg">
+                            <p class="font-bold">Penting:</p>
+                            <p class="text-sm">Karya yang masih "dalam proses submit" atau "memerlukan revisi" tidak akan dinilai. Anda wajib melampirkan bukti konkret seperti surat penerimaan dari penerbit.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="visa" class="section-content">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-gray-800">Informasi Penting Terkait Visa</h2>
+                    <p class="text-gray-600 mt-3 max-w-3xl mx-auto">Sebagai mahasiswa internasional, mematuhi peraturan visa adalah kewajiban mutlak. Beasiswa ini memberikan beberapa keuntungan, namun juga menuntut kepatuhan yang ketat.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="card border-l-4 border-green-500">
+                        <h3 class="font-bold text-xl mb-4">✅ Manfaat Terkait Visa</h3>
+                        <ul class="list-disc list-inside space-y-3 text-gray-700">
+                            <li>
+                                <strong>Bebas Biaya Aplikasi Visa:</strong> Salah satu keuntungan terbesar dari beasiswa RTP adalah biaya aplikasi visa pelajar Anda akan dibebaskan oleh Pemerintah Australia.
+                            </li>
+                             <li>
+                                <strong>Catatan Penting:</strong> Pembebasan ini hanya berlaku saat pengajuan awal. Universitas tidak akan mengganti biaya visa yang sudah terlanjur Anda bayarkan.
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card border-l-4 border-red-500">
+                        <h3 class="font-bold text-xl mb-4">⚠️ Kewajiban & Aturan Visa</h3>
+                        <ul class="list-disc list-inside space-y-3 text-gray-700">
+                            <li>
+                                <strong>Studi Paruh Waktu:</strong> Anda hanya diizinkan untuk studi paruh waktu (part-time) jika kondisi visa Anda secara eksplisit mengizinkannya.
+                            </li>
+                            <li>
+                                <strong>Penangguhan Studi (Suspension):</strong> Jika Anda menangguhkan studi, universitas wajib melaporkannya ke imigrasi. Hal ini dapat mengharuskan Anda untuk kembali ke negara asal selama masa penangguhan.
+                            </li>
+                            <li>
+                                <strong>Izin Tinggal Saat Penangguhan:</strong> Jika ingin tetap di Australia selama masa penangguhan, Anda harus melapor dan mendapatkan izin dari kantor imigrasi terdekat dalam 28 hari setelah penangguhan disetujui.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="aturan" class="section-content">
+                 <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-gray-800">Aturan dan Ketentuan Penting</h2>
+                    <p class="text-gray-600 mt-3 max-w-3xl mx-auto">Pahami aturan-aturan kunci berikut untuk memastikan Anda memenuhi syarat dan mempertahankan beasiswa Anda selama masa studi.</p>
+                </div>
+                <div class="space-y-4 max-w-4xl mx-auto">
+                    <div class="accordion-item">
+                        <div class="accordion-title">
+                            <span>Kapan beasiswa bisa dihentikan?</span>
+                            <div class="chevron">▼</div>
+                        </div>
+                        <div class="accordion-content">
+                            Beasiswa dapat dihentikan jika Anda: mengundurkan diri, gagal mendaftar ulang tanpa izin, telah menyerahkan tesis, gagal menunjukkan kemajuan riset yang memuaskan, atau melakukan pelanggaran serius (misalnya plagiarisme).
+                        </div>
+                    </div>
+                     <div class="accordion-item">
+                        <div class="accordion-title">
+                            <span>Bolehkah melakukan riset di luar Australia?</span>
+                            <div class="chevron">▼</div>
+                        </div>
+                        <div class="accordion-content">
+                            Ya, Anda dapat melakukan riset di luar negeri hingga 12 bulan (atau 18 bulan untuk kasus khusus seperti Antropologi). Ini hanya diizinkan setelah 6 bulan pertama studi dan jika riset tersebut esensial untuk penyelesaian disertasi Anda serta telah disetujui oleh pembimbing dan fakultas.
+                        </div>
+                    </div>
+                     <div class="accordion-item">
+                        <div class="accordion-title">
+                            <span>Bisakah beasiswa ini ditransfer ke universitas lain?</span>
+                            <div class="chevron">▼</div>
+                        </div>
+                        <div class="accordion-content">
+                            Tidak. Beasiswa ini bersifat spesifik untuk The University of Sydney dan tidak dapat ditransfer ke universitas lain jika Anda memutuskan untuk pindah.
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-title">
+                            <span>Bagaimana jika saya memberikan informasi yang tidak akurat?</span>
+                            <div class="chevron">▼</div>
+                        </div>
+                        <div class="accordion-content">
+                           Universitas berhak untuk menilai ulang atau bahkan mencabut beasiswa jika ditemukan bahwa Anda memberikan informasi yang salah atau menyesatkan selama proses aplikasi.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="faq" class="section-content">
+                <div class="text-center mb-10">
+                   <h2 class="text-3xl font-bold text-gray-800">Frequently Asked Questions (FAQ)</h2>
+                   <p class="text-gray-600 mt-3 max-w-3xl mx-auto">Temukan jawaban untuk pertanyaan paling umum mengenai aplikasi, hasil, dan ketentuan beasiswa RTP.</p>
+                </div>
+                <div class="space-y-4 max-w-4xl mx-auto">
+                    
+                    <h3 class="font-bold text-xl text-gray-700 mt-6 pt-6 border-t border-var(--color-border)">Aplikasi dan Linimasa</h3>
+                    <div class="accordion-item">
+                        <div class="accordion-title"><span>Apa yang terjadi jika saya melewatkan batas waktu pendaftaran?</span><div class="chevron">▼</div></div>
+                        <div class="accordion-content">Jika Anda telah mengajukan aplikasi perkuliahan dan/atau beasiswa setelah batas waktu, aplikasi Anda akan secara otomatis dipertimbangkan pada putaran berikutnya.</div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-title"><span>Dapatkah saya mengajukan beasiswa tanpa mendaftar masuk universitas?</span><div class="chevron">▼</div></div>
+                        <div class="accordion-content">Tidak, aplikasi beasiswa dinilai bersamaan dengan aplikasi Anda untuk masuk ke program gelar penelitian (HDR) di Universitas.</div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-title"><span>Saya sudah mengirim aplikasi, tapi ada publikasi baru. Bisakah ditambahkan?</span><div class="chevron">▼</div></div>
+                        <div class="accordion-content">Ya, Anda harus mengirim ulang seluruh aplikasi beasiswa Anda. Namun, jika pengiriman ulang dilakukan setelah batas waktu, aplikasi Anda akan dinilai pada putaran berikutnya.</div>
+                    </div>
+
+                    <h3 class="font-bold text-xl text-gray-700 mt-8 pt-6 border-t border-var(--color-border)">Hasil</h3>
+                     <div class="accordion-item">
+                        <div class="accordion-title"><span>Aplikasi saya tidak berhasil. Bisakah saya mendapatkan umpan balik?</span><div class="chevron">▼</div></div>
+                        <div class="accordion-content">Universitas tidak memberikan hasil peringkat spesifik. Pelamar dianjurkan untuk merujuk pada dokumen proses seleksi beasiswa HDR untuk informasi lebih lanjut.</div>
+                    </div>
+                     <div class="accordion-item">
+                        <div class="accordion-title"><span>Bagaimana cara meningkatkan aplikasi saya untuk pendaftaran selanjutnya?</span><div class="chevron">▼</div></div>
+                        <div class="accordion-content">Sangat disarankan untuk meninjau dokumen "Proses seleksi beasiswa HDR" dan "Panduan Pengalaman Penelitian" yang tersedia di situs web universitas.</div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-title"><span>Saya masuk daftar tunggu. Kapan saya akan tahu hasil akhirnya?</span><div class="chevron">▼</div></div>
+                        <div class="accordion-content">Aplikasi Anda akan dipertimbangkan kembali seiring tersedianya beasiswa baru. Keputusan akhir biasanya dirilis pada putaran hasil berikutnya sesuai jadwal.</div>
+                    </div>
+
+                    <h3 class="font-bold text-xl text-gray-700 mt-8 pt-6 border-t border-var(--color-border)">Penundaan dan Transfer</h3>
+                    <div class="accordion-item">
+                        <div class="accordion-title"><span>Bisakah saya menunda tawaran beasiswa saya?</span><div class="chevron">▼</div></div>
+                        <div class="accordion-content">Anda dapat menunda beasiswa Anda ke periode penelitian berikutnya, selama masih dalam tahun kalender yang sama di mana beasiswa itu awalnya ditawarkan.</div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-title"><span>Bisakah saya mentransfer beasiswa saya dari universitas lain?</span><div class="chevron">▼</div></div>
+                        <div class="accordion-content">Tidak, dana beasiswa tidak dapat ditransfer. Anda harus mengikuti proses aplikasi beasiswa dari awal di The University of Sydney.</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const scholarshipData = {
+                stipend: 41753,
+                tuitionFee: 50000 
+            };
+        
+            const ctx = document.getElementById('scholarshipChart').getContext('2d');
+            const scholarshipChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Uang Saku Tahunan', 'Estimasi Biaya Kuliah'],
+                    datasets: [{
+                        data: [scholarshipData.stipend, scholarshipData.tuitionFee],
+                        backgroundColor: ['#A27B5C', '#D6CDBF'],
+                        borderColor: ['#FFFFFF'],
+                        borderWidth: 4,
+                        hoverOffset: 12
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: { family: "'Inter', sans-serif", size: 14 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed !== null) {
+                                        label += new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', minimumFractionDigits: 0 }).format(context.parsed);
+                                    }
+                                    return label;
+                                }
+                            },
+                            bodyFont: { family: "'Inter', sans-serif", size: 14 },
+                            titleFont: { family: "'Inter', sans-serif", size: 16, weight: 'bold' }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.section-content');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    const targetSection = link.dataset.section;
+
+                    navLinks.forEach(nav => nav.classList.remove('active'));
+                    link.classList.add('active');
+
+                    sections.forEach(section => {
+                        if (section.id === targetSection) {
+                            section.classList.add('active');
+                        } else {
+                            section.classList.remove('active');
+                        }
+                    });
+                });
+            });
+
+            const accordionItems = document.querySelectorAll('.accordion-item');
+            accordionItems.forEach(item => {
+                const title = item.querySelector('.accordion-title');
+                if (title) {
+                    title.addEventListener('click', () => {
+                        item.classList.toggle('open');
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
